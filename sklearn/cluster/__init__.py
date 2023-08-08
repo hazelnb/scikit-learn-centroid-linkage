@@ -9,6 +9,7 @@ from ._agglomerative import (
     FeatureAgglomeration,
     linkage_tree,
     ward_tree,
+    centroid_tree
 )
 from ._bicluster import SpectralBiclustering, SpectralCoclustering
 from ._birch import Birch

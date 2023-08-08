@@ -681,6 +681,32 @@ def linkage_tree(
         return children, n_connected_components, n_leaves, parent, distances
     return children, n_connected_components, n_leaves, parent
 
+def centroid_tree(X, *, connectivity=None, n_clusters=None, return_distance=False):
+    from scipy.cluster.hierarchy import centroid
+
+    X = np.asarray(X)
+    if X.ndim == 1:
+        X = np.reshape(X, (-1, 1))
+
+    if connectivity is not None:
+        raise warnings.warn(
+            "Connectivity matrices not supported for centroid linkage"
+        )
+
+    n_samples, n_features = X.shape
+
+    scipy_tree = centroid(X)
+    children = scipy_tree[:, [0,1]].astype(int)
+    n_connected_compenents = 1
+    n_leaves = n_samples
+    parent = None
+    distances = scipy_tree[:, 2]
+
+    if return_distance:
+        return children, n_connected_compenents, n_leaves, parent, distances
+    else:
+        return children, n_connected_compenents, n_leaves, parent
+    
 
 # Matching names to tree-building strategies
 def _complete_linkage(*args, **kwargs):
@@ -696,13 +722,13 @@ def _average_linkage(*args, **kwargs):
 def _single_linkage(*args, **kwargs):
     kwargs["linkage"] = "single"
     return linkage_tree(*args, **kwargs)
-
-
+ 
 _TREE_BUILDERS = dict(
     ward=ward_tree,
     complete=_complete_linkage,
     average=_average_linkage,
     single=_single_linkage,
+    centroid=centroid_tree,
 )
 
 ###############################################################################
@@ -1060,7 +1086,7 @@ class AgglomerativeClustering(ClusterMixin, BaseEstimator):
 
         # Construct the tree
         kwargs = {}
-        if self.linkage != "ward":
+        if self.linkage != "ward" and self.linkage != "centroid":
             kwargs["linkage"] = self.linkage
             kwargs["affinity"] = self._metric
 
